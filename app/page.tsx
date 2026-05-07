@@ -11,6 +11,7 @@ import {
   verticalListSortingStrategy, useSortable, arrayMove,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { track as vTrack } from '@vercel/analytics'
 import { Track } from '@/types'
 import { camelotColor, camelotCompatibility, Compatibility } from '@/lib/camelot'
 import { analyzeTrack } from '@/lib/client-analyze'
@@ -421,6 +422,7 @@ export default function Home() {
     const tracks = data.slice(0, maxTracks)
     setSelectedTracks(tracks)
     setLoading(false)
+    vTrack('playlist_imported', { trackCount: tracks.length })
     tracks.forEach(analyzeInputTrack)
   }
 
@@ -429,6 +431,7 @@ export default function Home() {
     setSelectedTracks((p) => [...p, track])
     setSearchResults([])
     setQuery('')
+    vTrack('track_added', { source: 'search' })
     analyzeInputTrack(track)
   }
 
@@ -539,6 +542,11 @@ export default function Home() {
 
   async function handleSuggest() {
     if (selectedTracks.length === 0) return
+    vTrack('suggest_clicked', {
+      trackCount: selectedTracks.length,
+      bpmTolerance,
+      maxTracks,
+    })
     setLoading(true)
     setSuggestedPlaylist([])
     const res = await fetch('/api/suggest', {
@@ -1143,6 +1151,40 @@ export default function Home() {
             </div>
           </section>
         )}
+
+        {/* About — visible content for SEO and user comprehension */}
+        <footer className="mt-20 pt-8 border-t border-white/5 text-white/30">
+          <h2 className="text-[10px] uppercase tracking-[0.18em] font-bold text-purple-400/60 mb-4">
+            DJ Mix Suggester とは
+          </h2>
+          <div className="space-y-3 text-[12px] leading-relaxed">
+            <p>
+              曲名やSpotifyプレイリストを入力するだけで、
+              <strong className="text-white/50">BPM（テンポ）</strong>と
+              <strong className="text-white/50">Camelotキー（ハーモニックミキシング）</strong>
+              の互換性を考慮し、滑らかに繋がるDJミックスのセットリストを自動生成するWebツールです。
+            </p>
+            <p>
+              曲と曲のBPM差が大きい区間には、AIが知識ベースから
+              <strong className="text-white/50">ブリッジ曲</strong>
+              を提案して挿入します。Camelot wheelの隣接キー判定により、キーの衝突しない選曲が可能です。
+            </p>
+            <p>
+              インストール不要・登録不要。ブラウザだけでDJの選曲・繋ぎを補助します。
+            </p>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-white/20">
+            <span>BPMマッチング</span>
+            <span>·</span>
+            <span>Camelot互換</span>
+            <span>·</span>
+            <span>ハーモニックミキシング</span>
+            <span>·</span>
+            <span>AIブリッジ提案</span>
+            <span>·</span>
+            <span>プレイリスト生成</span>
+          </div>
+        </footer>
       </div>
     </main>
   )
