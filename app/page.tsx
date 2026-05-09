@@ -16,6 +16,14 @@ import { Track } from '@/types'
 import { camelotColor, camelotCompatibility, Compatibility } from '@/lib/camelot'
 import { analyzeTrack } from '@/lib/client-analyze'
 import { useLocale, useT } from '@/lib/i18n'
+import { capture as phCapture } from '@/lib/posthog'
+
+// Dual-track to both Vercel Analytics and PostHog.
+// Vercel = page views & traffic source. PostHog = behavior & session replay.
+function trackEvent(name: string, props?: Record<string, string | number | boolean>) {
+  vTrack(name, props)
+  phCapture(name, props)
+}
 
 // ─── Language Toggle ──────────────────────────────────────────────────────────
 
@@ -450,7 +458,7 @@ export default function Home() {
     const tracks = data.slice(0, maxTracks)
     setSelectedTracks(tracks)
     setLoading(false)
-    vTrack('playlist_imported', { trackCount: tracks.length })
+    trackEvent('playlist_imported', { trackCount: tracks.length })
     tracks.forEach(analyzeInputTrack)
   }
 
@@ -459,7 +467,7 @@ export default function Home() {
     setSelectedTracks((p) => [...p, track])
     setSearchResults([])
     setQuery('')
-    vTrack('track_added', { source: 'search' })
+    trackEvent('track_added', { source: 'search' })
     analyzeInputTrack(track)
   }
 
@@ -570,7 +578,7 @@ export default function Home() {
 
   async function handleSuggest() {
     if (selectedTracks.length === 0) return
-    vTrack('suggest_clicked', {
+    trackEvent('suggest_clicked', {
       trackCount: selectedTracks.length,
       bpmTolerance,
       maxTracks,
