@@ -25,6 +25,11 @@ function trackEvent(name: string, props?: Record<string, string | number | boole
   phCapture(name, props)
 }
 
+// ─── Buy Me a Coffee ──────────────────────────────────────────────────────────
+// Update BMC_USERNAME with your handle from https://www.buymeacoffee.com/<USERNAME>
+const BMC_USERNAME = 'kotokoto'
+const BMC_URL = `https://www.buymeacoffee.com/${BMC_USERNAME}`
+
 // ─── Language Toggle ──────────────────────────────────────────────────────────
 
 function LangToggle() {
@@ -1221,6 +1226,27 @@ export default function Home() {
             <span>{t('about.tag.aiBridge')}</span>
             <span>·</span>
             <span>{t('about.tag.playlistGen')}</span>
+          </div>
+
+          {/* Buy Me a Coffee */}
+          <div className="mt-10 pt-6 border-t border-white/5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <p className="text-[11px] text-white/30 leading-relaxed max-w-md">
+              {t('support.invite')}
+            </p>
+            <a
+              href={BMC_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent('bmc_clicked')}
+              className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-bold transition-all duration-200 self-start sm:self-auto"
+              style={{
+                background: 'linear-gradient(135deg, #FFDD00 0%, #FFC700 100%)',
+                color: '#0c0c0c',
+                boxShadow: '0 2px 12px rgba(255,221,0,0.18)',
+              }}
+            >
+              {t('support.button')}
+            </a>
           </div>
         </footer>
       </div>

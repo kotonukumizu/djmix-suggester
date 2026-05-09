@@ -88,6 +88,10 @@ const ja: Messages = {
   'about.tag.harmonic': 'ハーモニックミキシング',
   'about.tag.aiBridge': 'AIブリッジ提案',
   'about.tag.playlistGen': 'プレイリスト生成',
+
+  // Support / Buy Me a Coffee
+  'support.invite': 'このツールが役に立ったら、コーヒー一杯ぶんの応援をいただけると嬉しいです。',
+  'support.button': '☕ Buy me a coffee',
 }
 
 const en: Messages = {
@@ -165,6 +169,10 @@ const en: Messages = {
   'about.tag.harmonic': 'Harmonic mixing',
   'about.tag.aiBridge': 'AI bridge suggestions',
   'about.tag.playlistGen': 'Playlist generation',
+
+  // Support / Buy Me a Coffee
+  'support.invite': 'If this tool helps you, consider buying me a coffee — it keeps the project going.',
+  'support.button': '☕ Buy me a coffee',
 }
 
 const dictionaries: Record<Locale, Messages> = { ja, en }
