@@ -15,6 +15,31 @@ import { track as vTrack } from '@vercel/analytics'
 import { Track } from '@/types'
 import { camelotColor, camelotCompatibility, Compatibility } from '@/lib/camelot'
 import { analyzeTrack } from '@/lib/client-analyze'
+import { useLocale, useT } from '@/lib/i18n'
+
+// ─── Language Toggle ──────────────────────────────────────────────────────────
+
+function LangToggle() {
+  const { locale, setLocale } = useLocale()
+  return (
+    <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-0.5 text-[10px] font-bold tracking-wider">
+      {(['ja', 'en'] as const).map((l) => (
+        <button
+          key={l}
+          onClick={() => setLocale(l)}
+          aria-pressed={locale === l}
+          className={`px-2.5 py-1 rounded-full uppercase transition-colors ${
+            locale === l
+              ? 'bg-purple-500/25 text-purple-200 shadow-[0_0_8px_rgba(168,85,247,0.25)]'
+              : 'text-white/40 hover:text-white/70'
+          }`}
+        >
+          {l}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 // ─── Audio Preview ────────────────────────────────────────────────────────────
 
@@ -160,6 +185,7 @@ function pruneIneffectiveBridges(playlist: Track[]): { pruned: Track[]; kept: nu
 }
 
 function TransitionLine({ from, to, tolerance = 7 }: { from: Track; to: Track; tolerance?: number }) {
+  const t = useT()
   const compat = camelotCompatibility(from.camelot, to.camelot)
   const { label, color: keyColor } = COMPAT_STYLE[compat]
 
@@ -184,7 +210,7 @@ function TransitionLine({ from, to, tolerance = 7 }: { from: Track; to: Track; t
         }}
       >
         {!bpmOk && (
-          <span title={`BPM差が${tolerance}を超えています`} className="text-red-400 text-[11px]">⚠</span>
+          <span title={t('track.tolerance.warn', { n: tolerance })} className="text-red-400 text-[11px]">⚠</span>
         )}
         {effDiff !== null && (
           <span className="font-mono font-semibold" style={{ color: bpmColor }}>
@@ -224,6 +250,7 @@ function TrackCard({
   poolExpanded?: boolean
   showBadges?: boolean
 }) {
+  const t = useT()
   return (
     <div className={`flex items-center gap-3 rounded-xl px-3 py-2.5 group transition-all duration-200 ${
       isBridge
@@ -254,7 +281,7 @@ function TrackCard({
           <button
             onClick={onRetryAnalyze}
             className="w-5 h-5 rounded-full flex items-center justify-center text-white/25 hover:text-purple-300 hover:bg-purple-500/15 transition-all duration-150 shrink-0"
-            title="BPM・Keyを再解析"
+            title={t('track.title.reanalyze')}
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="23 4 23 10 17 10"/>
@@ -280,9 +307,9 @@ function TrackCard({
                 ? 'text-amber-300 bg-amber-500/12 border-amber-500/28'
                 : 'text-purple-400/60 hover:text-purple-200 bg-purple-500/8 hover:bg-purple-500/18 border-purple-500/20 hover:border-purple-400/38'
             }`}
-            title="候補曲一覧を表示"
+            title={t('track.title.showPool')}
           >
-            {poolExpanded ? '閉じる' : '候補'}
+            {poolExpanded ? t('track.btn.close') : t('track.btn.candidates')}
           </button>
         )}
         {onRemove && (
@@ -356,6 +383,7 @@ async function analyzeTrackWithRetry(
 // ─── Main Page ─────────────────────────────────────────────────────────────
 
 export default function Home() {
+  const t = useT()
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Track[]>([])
   const [selectedTracks, setSelectedTracks] = useState<Track[]>([])
@@ -687,18 +715,21 @@ export default function Home() {
               </h1>
               <div className="flex items-center gap-2 mt-1.5">
                 <div className="h-px w-20 bg-gradient-to-r from-purple-500/70 to-transparent" />
-                <span className="text-[9px] text-purple-400/60 uppercase tracking-[0.18em] font-bold">Powered by Camelot &amp; BPM</span>
+                <span className="text-[9px] text-purple-400/60 uppercase tracking-[0.18em] font-bold">{t('header.poweredBy')}</span>
               </div>
             </div>
+            <div className="ml-auto">
+              <LangToggle />
+            </div>
           </div>
-          <p className="text-white/30 text-[13px] ml-[3.75rem] leading-relaxed">好きな曲を選んでブリッジ曲を自動提案。BPM・Camelot互換でスムーズにミックス。</p>
+          <p className="text-white/30 text-[13px] ml-[3.75rem] leading-relaxed">{t('header.tagline')}</p>
         </div>
 
         {/* Search */}
         <section className="mb-6">
           <label className="flex items-center gap-2 text-[9px] text-purple-400/60 uppercase tracking-[0.18em] mb-3 font-bold">
             <span className="w-1 h-3 rounded-full bg-gradient-to-b from-purple-400/80 to-purple-600/40" />
-            曲を検索して追加
+            {t('search.label')}
           </label>
           <div className="relative">
             <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none">
@@ -710,11 +741,11 @@ export default function Home() {
               type="text"
               value={query}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder="曲名 / アーティスト名..."
+              placeholder={t('search.placeholder')}
               className="w-full bg-[#12121e] border border-white/8 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-white/18 focus:outline-none focus:border-purple-500/50 focus:bg-[#13132a] focus:shadow-[0_0_0_2px_rgba(168,85,247,0.12),0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-200"
             />
             {searching && (
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 text-xs animate-pulse">検索中…</span>
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 text-xs animate-pulse">{t('search.searching')}</span>
             )}
           </div>
           {searchResults.length > 0 && (
@@ -743,14 +774,14 @@ export default function Home() {
         <section className="mb-8">
           <label className="flex items-center gap-2 text-[9px] text-purple-400/60 uppercase tracking-[0.18em] mb-3 font-bold">
             <span className="w-1 h-3 rounded-full bg-gradient-to-b from-purple-400/80 to-purple-600/40" />
-            Spotifyプレイリストから読み込む
+            {t('playlist.label')}
           </label>
           <div className="flex gap-2">
             <input
               type="text"
               value={playlistUrl}
               onChange={(e) => setPlaylistUrl(e.target.value)}
-              placeholder="https://open.spotify.com/playlist/..."
+              placeholder={t('playlist.placeholder')}
               className="flex-1 bg-[#12121e] border border-white/8 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/18 focus:outline-none focus:border-purple-500/50 focus:bg-[#13132a] focus:shadow-[0_0_0_2px_rgba(168,85,247,0.12)] transition-all duration-200"
             />
             <button
@@ -758,7 +789,7 @@ export default function Home() {
               disabled={loading}
               className="px-4 py-2.5 bg-white/6 hover:bg-white/10 border border-white/8 hover:border-purple-500/30 hover:text-purple-200 rounded-xl text-sm text-white/60 transition-all duration-200 disabled:opacity-40 shrink-0"
             >
-              読み込む
+              {t('playlist.load')}
             </button>
           </div>
         </section>
@@ -769,15 +800,15 @@ export default function Home() {
             <div className="flex items-center justify-between mb-3">
               <label className="flex items-center gap-2 text-[9px] text-purple-400/60 uppercase tracking-[0.18em] font-bold">
                 <span className="w-1 h-3 rounded-full bg-gradient-to-b from-purple-400/80 to-purple-600/40" />
-                選択した曲
+                {t('selected.label')}
                 <span className="text-purple-400/90 font-extrabold text-[11px] normal-case tracking-tight tabular-nums">{selectedTracks.length}</span>
-                <span className="text-white/18 text-[9px] font-normal normal-case tracking-normal">/ {maxTracks}曲</span>
+                <span className="text-white/18 text-[9px] font-normal normal-case tracking-normal">{t('selected.maxSuffix', { n: maxTracks })}</span>
               </label>
               <button
                 onClick={() => setSelectedTracks([])}
                 className="text-[11px] text-white/20 hover:text-white/45 transition-colors px-2.5 py-1 rounded-lg hover:bg-white/5 border border-transparent hover:border-white/8"
               >
-                クリア
+                {t('selected.clear')}
               </button>
             </div>
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -800,7 +831,7 @@ export default function Home() {
             <div className="mt-4 rounded-xl bg-white/2 border border-white/6 overflow-hidden">
               <div className="flex items-center gap-3 px-4 py-3">
                 <div className="shrink-0">
-                  <p className="text-[9px] text-white/35 uppercase tracking-[0.16em] font-bold">BPM許容差</p>
+                  <p className="text-[9px] text-white/35 uppercase tracking-[0.16em] font-bold">{t('tolerance.label')}</p>
                 </div>
                 <input
                   type="range"
@@ -850,18 +881,18 @@ export default function Home() {
                     <svg className="animate-spin w-4 h-4 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <circle cx="12" cy="12" r="10" strokeOpacity="0.2" /><path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
                     </svg>
-                    検索中…
+                    {t('suggest.searching')}
                   </>
                 ) : inputAnalyzingIds.size > 0 ? (
                   <>
                     <svg className="animate-spin w-4 h-4 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <circle cx="12" cy="12" r="10" strokeOpacity="0.2" /><path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
                     </svg>
-                    {`BPMを解析中… (${inputAnalyzingIds.size}曲)`}
+                    {t('suggest.analyzing', { n: inputAnalyzingIds.size })}
                   </>
                 ) : (
                   <>
-                    ブリッジ曲を提案する
+                    {t('suggest.button')}
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
                     </svg>
@@ -947,16 +978,16 @@ export default function Home() {
                 </div>
 
                 <p className="text-white/75 text-sm font-semibold tracking-wide">
-                  {loading ? 'ブリッジ曲を探しています…' : `BPMを解析中… (${inputAnalyzingIds.size}曲)`}
+                  {loading ? t('suggest.loadingTitle') : t('suggest.analyzing', { n: inputAnalyzingIds.size })}
                 </p>
                 <p className="text-white/35 text-xs">
-                  {loading ? '30〜60秒かかります' : '解析が終わると提案できます'}
+                  {loading ? t('suggest.loadingSub.duration') : t('suggest.loadingSub.waitAnalysis')}
                 </p>
               </div>
             )}
 
             {selectedTracks.length < 2 && !loading && (
-              <p className="text-center text-white/25 text-xs mt-2">曲を2つ以上追加してください</p>
+              <p className="text-center text-white/25 text-xs mt-2">{t('selected.minHint')}</p>
             )}
           </section>
         )}
@@ -967,8 +998,8 @@ export default function Home() {
             <div className="flex items-center justify-between mb-3">
               <label className="flex items-center gap-2 text-[9px] text-purple-400/60 uppercase tracking-[0.18em] font-bold">
                 <span className="w-1 h-3 rounded-full bg-gradient-to-b from-purple-400/80 to-purple-600/40" />
-                提案されたミックス
-                <span className="text-purple-400/90 font-extrabold text-[11px] normal-case tracking-tight tabular-nums">{suggestedPlaylist.length}曲</span>
+                {t('result.title')}
+                <span className="text-purple-400/90 font-extrabold text-[11px] normal-case tracking-tight tabular-nums">{t('result.tracksSuffix', { n: suggestedPlaylist.length })}</span>
               </label>
               <div className="flex items-center gap-1.5">
                 <button
@@ -984,14 +1015,14 @@ export default function Home() {
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
-                      コピーしました
+                      {t('result.copied')}
                     </>
                   ) : (
                     <>
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                       </svg>
-                      コピー
+                      {t('result.copy')}
                     </>
                   )}
                 </button>
@@ -1038,9 +1069,9 @@ export default function Home() {
                         <div className="flex items-center justify-between px-3 py-2 border-b border-purple-500/12 bg-purple-950/30">
                           <p className="text-[9px] text-purple-400/70 uppercase tracking-[0.14em] font-bold flex items-center gap-1.5">
                             <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="opacity-70"><circle cx="12" cy="12" r="3"/><path d="M20.188 10.934c.2.4.312.845.312 1.066s-.112.666-.312 1.066C19.236 15.066 15.818 18 12 18c-3.818 0-7.236-2.934-8.188-4.934C3.612 12.666 3.5 12.221 3.5 12s.112-.666.312-1.066C4.764 8.934 8.182 6 12 6c3.818 0 7.236 2.934 8.188 4.934z"/></svg>
-                            候補
-                            <span className="text-purple-300/80 font-extrabold">{poolCandidates.length}</span>曲
-                            <span className="text-purple-400/35 normal-case font-medium tracking-normal ml-0.5">— クリックで差し替え</span>
+                            {t('pool.headerCount')}
+                            <span className="text-purple-300/80 font-extrabold">{poolCandidates.length}</span>{t('pool.tracksWord')}
+                            <span className="text-purple-400/35 normal-case font-medium tracking-normal ml-0.5">{t('pool.swapHint')}</span>
                           </p>
                           {track.targetBpm != null && (
                             <span className="text-[9px] text-white/25 font-mono flex items-center gap-1">
@@ -1054,10 +1085,10 @@ export default function Home() {
                         <div className="flex items-center gap-2.5 px-3 py-1.5 border-b border-white/4">
                           <span className="w-4" />
                           <span className="w-[26px]" />
-                          <span className="flex-1 text-[9px] text-white/18 uppercase tracking-[0.1em]">曲名</span>
+                          <span className="flex-1 text-[9px] text-white/18 uppercase tracking-[0.1em]">{t('pool.col.title')}</span>
                           <span className="text-[9px] text-white/18 uppercase tracking-[0.1em] w-8 text-right">BPM</span>
                           <span className="text-[9px] text-white/18 uppercase tracking-[0.1em] w-7">Key</span>
-                          <span className="text-[9px] text-white/18 uppercase tracking-[0.1em] w-7 text-right">差</span>
+                          <span className="text-[9px] text-white/18 uppercase tracking-[0.1em] w-7 text-right">{t('pool.col.diff')}</span>
                         </div>
                         <div className="divide-y divide-white/4">
                         {[...poolCandidates]
@@ -1100,7 +1131,7 @@ export default function Home() {
                                 <div className="flex-1 min-w-0">
                                   <p className={`truncate font-medium leading-tight text-[12px] ${isCurrentBridge ? 'text-purple-200' : 'text-white/55 group-hover:text-white/80'}`}>
                                     {c.name}
-                                    {isCurrentBridge && <span className="ml-1.5 text-[8px] text-purple-400/60 uppercase tracking-[0.12em] font-extrabold">選択中</span>}
+                                    {isCurrentBridge && <span className="ml-1.5 text-[8px] text-purple-400/60 uppercase tracking-[0.12em] font-extrabold">{t('pool.selected')}</span>}
                                   </p>
                                   <p className="text-white/22 text-[10px] truncate mt-0.5">{c.artist}</p>
                                 </div>
@@ -1132,13 +1163,13 @@ export default function Home() {
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-purple-400/50">
                   <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
                 </svg>
-                <span className="text-[9px] text-white/25 uppercase tracking-[0.16em] font-bold">使い方ガイド</span>
+                <span className="text-[9px] text-white/25 uppercase tracking-[0.16em] font-bold">{t('guide.title')}</span>
               </div>
               <div className="px-4 py-4 space-y-3">
                 {[
-                  { icon: '◆', text: '紫のカードがAIが追加したブリッジ曲です' },
-                  { icon: '♪', text: 'Camelotの数字が近いほど、ハーモニックに繋がりやすいです' },
-                  { icon: '—', text: 'BPMが「—」の曲はプレビュー音源からBPMを取得できませんでした' },
+                  { icon: '◆', text: t('guide.bullet.bridge') },
+                  { icon: '♪', text: t('guide.bullet.camelot') },
+                  { icon: '—', text: t('guide.bullet.bpmDash') },
                 ].map(({ icon, text }, i) => (
                   <div key={i} className="flex items-start gap-3">
                     <span className="shrink-0 mt-0.5 w-5 h-5 rounded-lg border border-purple-500/25 bg-purple-500/8 flex items-center justify-center shadow-[0_0_6px_rgba(168,85,247,0.06)]">
@@ -1155,34 +1186,33 @@ export default function Home() {
         {/* About — visible content for SEO and user comprehension */}
         <footer className="mt-20 pt-8 border-t border-white/5 text-white/30">
           <h2 className="text-[10px] uppercase tracking-[0.18em] font-bold text-purple-400/60 mb-4">
-            DJ Mix Suggester とは
+            {t('about.title')}
           </h2>
           <div className="space-y-3 text-[12px] leading-relaxed">
             <p>
-              曲名やSpotifyプレイリストを入力するだけで、
-              <strong className="text-white/50">BPM（テンポ）</strong>と
-              <strong className="text-white/50">Camelotキー（ハーモニックミキシング）</strong>
-              の互換性を考慮し、滑らかに繋がるDJミックスのセットリストを自動生成するWebツールです。
+              {t('about.p1.before')}
+              <strong className="text-white/50">{t('about.p1.bpmStrong')}</strong>
+              {t('about.p1.middle')}
+              <strong className="text-white/50">{t('about.p1.camelotStrong')}</strong>
+              {t('about.p1.after')}
             </p>
             <p>
-              曲と曲のBPM差が大きい区間には、AIが知識ベースから
-              <strong className="text-white/50">ブリッジ曲</strong>
-              を提案して挿入します。Camelot wheelの隣接キー判定により、キーの衝突しない選曲が可能です。
+              {t('about.p2.before')}
+              <strong className="text-white/50">{t('about.p2.bridgeStrong')}</strong>
+              {t('about.p2.after')}
             </p>
-            <p>
-              インストール不要・登録不要。ブラウザだけでDJの選曲・繋ぎを補助します。
-            </p>
+            <p>{t('about.p3')}</p>
           </div>
           <div className="mt-6 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-white/20">
-            <span>BPMマッチング</span>
+            <span>{t('about.tag.bpmMatch')}</span>
             <span>·</span>
-            <span>Camelot互換</span>
+            <span>{t('about.tag.camelotCompat')}</span>
             <span>·</span>
-            <span>ハーモニックミキシング</span>
+            <span>{t('about.tag.harmonic')}</span>
             <span>·</span>
-            <span>AIブリッジ提案</span>
+            <span>{t('about.tag.aiBridge')}</span>
             <span>·</span>
-            <span>プレイリスト生成</span>
+            <span>{t('about.tag.playlistGen')}</span>
           </div>
         </footer>
       </div>
